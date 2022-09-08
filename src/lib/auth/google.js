@@ -11,7 +11,6 @@ const googleStrategy = new GoogleStrategy(
   async (_, __, profile, passportNext) => {
     // This callback function is executed when Google sends us a successfull response back
     // Here we gonna receive some informations about the user from Google (scopes --> email, profile)
-    console.log("PROFILE: ", profile)
 
     try {
       // 1. Check if the user is already in our db
@@ -23,7 +22,6 @@ const googleStrategy = new GoogleStrategy(
           _id: user._id,
           role: user.role,
         })
-        console.log("ACCESS TOKEN: ", accessToken)
 
         // 2.1. Then we can go next (we go to the /googleRedirect route handler function) passing the token
         passportNext(null, { accessToken }) // passportNext takes as first parameter an error (if we had any), and as second parameter we can pass some informations to what is coming next

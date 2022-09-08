@@ -31,7 +31,8 @@ usersRouter.get(
     // The purpose of this endpoint is to receive a response from Google, then execute the google callback function (the one configured in the google strategy), then send a response to the client
     try {
       const { accessToken } = req.user // passportNext is adding the accessToken to something called req.user
-      res.send({ accessToken })
+      // res.send({ accessToken })
+      res.redirect(`${process.env.FE_URL}/users?accessToken=${accessToken}`)
     } catch (error) {
       next(error)
     }
