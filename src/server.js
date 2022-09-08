@@ -3,6 +3,7 @@ import listEndpoints from "express-list-endpoints"
 import mongoose from "mongoose"
 import cors from "cors"
 import passport from "passport"
+import cookieParser from "cookie-parser"
 import usersRouter from "./api/users/index.js"
 import {
   forbiddenErrorHandler,
@@ -18,7 +19,8 @@ const port = process.env.PORT || 3001
 passport.use("google", googleStrategy) // Do not forget to inform passport that we need to use googleStrategy
 
 // ********************************* MIDDLEWARES *****************************
-server.use(cors())
+server.use(cors({ origin: process.env.FE_URL, credentials: true }))
+server.use(cookieParser())
 server.use(express.json())
 server.use(passport.initialize()) // Do not forget to inform Express that we need to use passport
 

@@ -32,7 +32,10 @@ usersRouter.get(
     try {
       const { accessToken } = req.user // passportNext is adding the accessToken to something called req.user
       // res.send({ accessToken })
-      res.redirect(`${process.env.FE_URL}/users?accessToken=${accessToken}`)
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+      })
+      res.redirect(`${process.env.FE_URL}/users`)
     } catch (error) {
       next(error)
     }
