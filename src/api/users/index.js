@@ -1,5 +1,6 @@
 import express from "express"
 import createError from "http-errors"
+import passport from "passport"
 import { adminOnlyMiddleware } from "../../lib/auth/admin.js"
 import { basicAuthMiddleware } from "../../lib/auth/basic.js"
 import { JWTAuthMiddleware } from "../../lib/auth/token.js"
@@ -17,6 +18,25 @@ usersRouter.post("/", async (req, res, next) => {
     next(error)
   }
 })
+
+usersRouter.get(
+  "/googleLogin",
+  passport.authenticate("google", { scope: ["profile", "email"] }) // The purpose of this endpoint is to redirect users to Google Consent Screen
+)
+
+usersRouter.get(
+  "/googleRedirect",
+  passport.authenticate("google", { session: false }),
+  (req, res, next) => {
+    // The purpose of this endpoint is to receive a response from Google, then execute the google callback function (the one configured in the google strategy), then send a response to the client
+    try {
+      const { accessToken } = req.user // passportNext is adding the accessToken to something called req.user
+      res.send({ accessToken })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
 
 usersRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
@@ -42,7 +62,11 @@ usersRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
 
 usersRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const updatedUser = await UsersModel.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true })
+    const updatedUser = await UsersModel.findByIdAndUpdate(
+      req.user._id,
+      req.body,
+      { new: true, runValidators: true }
+    )
     if (updatedUser) {
       res.send(updatedUser)
     } else {
@@ -75,31 +99,45 @@ usersRouter.get("/:userId", JWTAuthMiddleware, async (req, res, next) => {
   }
 })
 
-usersRouter.put("/:userId", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
-  try {
-    const updatedUser = await UsersModel.findByIdAndUpdate(req.params.userId, req.body, { new: true, runValidators: true })
-    if (updatedUser) {
-      res.send(updatedUser)
-    } else {
-      next(createError(404, `User with id ${req.params.userId} not found!`))
+usersRouter.put(
+  "/:userId",
+  JWTAuthMiddleware,
+  adminOnlyMiddleware,
+  async (req, res, next) => {
+    try {
+      const updatedUser = await UsersModel.findByIdAndUpdate(
+        req.params.userId,
+        req.body,
+        { new: true, runValidators: true }
+      )
+      if (updatedUser) {
+        res.send(updatedUser)
+      } else {
+        next(createError(404, `User with id ${req.params.userId} not found!`))
+      }
+    } catch (error) {
+      next(error)
     }
-  } catch (error) {
-    next(error)
   }
-})
+)
 
-usersRouter.delete("/:userId", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
-  try {
-    const deletedUser = await UsersModel.findByIdAndDelete(req.params.userId)
-    if (deletedUser) {
-      res.status(204).send()
-    } else {
-      next(createError(404, `User with id ${req.params.userId} not found!`))
+usersRouter.delete(
+  "/:userId",
+  JWTAuthMiddleware,
+  adminOnlyMiddleware,
+  async (req, res, next) => {
+    try {
+      const deletedUser = await UsersModel.findByIdAndDelete(req.params.userId)
+      if (deletedUser) {
+        res.status(204).send()
+      } else {
+        next(createError(404, `User with id ${req.params.userId} not found!`))
+      }
+    } catch (error) {
+      next(error)
     }
-  } catch (error) {
-    next(error)
   }
-})
+)
 
 usersRouter.post("/login", async (req, res, next) => {
   try {
